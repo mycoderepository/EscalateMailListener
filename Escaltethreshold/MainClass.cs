@@ -18,17 +18,34 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Configuration;
 using Twilio;
-
+using MySql.Data.MySqlClient;
 using com.IBL.Utility;
+using System.Data.SqlClient;
 
 
 
 
 namespace Escaltethreshold
 {
+
+
+    public struct mDataReader
+    {
+        public MySqlDataReader mysqldr;
+        public OracleDataReader orardr;
+        public SqlDataReader sqlrdr;
+
+
+    }
+
+
     class MainClass
     {
         ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2007_SP1);
+        string omysqlserver = ConfigurationManager.AppSettings["mysqlserver"];
+        string oserveruname = ConfigurationManager.AppSettings["serveruname"];
+        string oserverpwd = ConfigurationManager.AppSettings["serverpwd"];
+        string oserverport = ConfigurationManager.AppSettings["serverport"];
         
         #region find outlook items
         public void FindItems()
@@ -120,7 +137,7 @@ namespace Escaltethreshold
 
                 oAppointment.Subject = xsubject; // set the subject
                 oAppointment.Body = xbody; // set the body
-                oAppointment.Location = "My Office"; // set the location
+                oAppointment.Location = " Office"; // set the location
                 oAppointment.Start = xsentdate; // Set the start date 
                 oAppointment.End = xsentdate.AddHours(3); // End date 
                 oAppointment.ReminderSet = true; // Set the reminder
@@ -132,8 +149,7 @@ namespace Escaltethreshold
                 Outlook.MailItem mailItem = oAppointment.ForwardAsVcal();
 
                 // email address to send to 
-                mailItem.To =  ConfigurationManager.AppSettings["xemail"]; //"mondaykadiri@gmail.com"; ConfigurationSettings.AppSettings["xemail"];
-                 
+                mailItem.To =  ConfigurationManager.AppSettings["xemail"]; 
                 mailItem.Send();
 
 
@@ -244,8 +260,86 @@ namespace Escaltethreshold
         }
         #endregion
 
+        #region new insert class
+        public int iClass(string osql, int i)
+        {
 
 
-    
+            if (i == 1)
+            {
+
+                try
+                {
+
+                    string xconn = ConfigurationManager.ConnectionStrings["conSQL1"].ConnectionString;
+                    SqlConnection conn = new SqlConnection((xconn));
+
+
+                    string isql = osql;
+                    SqlCommand cmd = new SqlCommand(isql, conn);
+                    conn.Open();
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
+                    return 1;
+
+                    conn.Close();
+                    conn.Dispose();
+
+
+                }
+                catch (Exception ex)
+                {
+                    string elog = Convert.ToString(ex);
+                    Trace.WriteLine(elog);
+                    return 0;
+
+                }
+
+            }
+            else if (i == 2)
+            {
+             
+                try
+                {
+                    string oenusername = (oserveruname);
+                    string oenpassword =(oserverpwd);
+                    string xconn = "Server=" + omysqlserver + ";Port=" + oserverport + ";Database=isng;Uid=" + oenusername + ";Pwd=" + oenpassword + "";
+
+                  
+                    MySqlConnection conn = new MySqlConnection((xconn));
+
+
+                    string isql = osql;
+            
+
+                    MySqlCommand cmd = new MySqlCommand(isql, conn);
+                    conn.Open();
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
+                    return 1;
+
+
+                    conn.Close();
+                    conn.Dispose();
+
+                }
+                catch (Exception ex)
+                {
+                    string elog = Convert.ToString(ex);
+                    Trace.WriteLine(elog);
+                    return 0;
+
+                }
+
+            }
+            return 0;
+          
+
+        }
+
+            #endregion
+
+
+
     }
 }

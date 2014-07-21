@@ -204,7 +204,8 @@ namespace Escaltethreshold
 
 
                             //insert into oracle database
-                            int ires = m.insupddelClass(isql);
+                            //int ires = m.insupddelClass(isql);
+                            int ires = m.iClass(isql, 2);
                             if (ires == 0)
                             {
                                 Trace.WriteLine(">>>>>>> Information not inserted into Database");
@@ -213,7 +214,7 @@ namespace Escaltethreshold
 
                             //send Text Messages
                             string xphone = "+2348029998152";//ConfigurationManager.AppSettings["phonenumber"];
-                            string msg = " Hello you have an appointment with " + recepients + "  " + subject + " Please check your calendar";
+                            string msg = " Hello you have an appointment with " + recepients + "  on  " + subject + " Please check your calendar";
 
                             //call send SMS method
                             m.sendtextmessage(xphone, msg);
@@ -246,7 +247,7 @@ namespace Escaltethreshold
 
                     DateTime Enddate = dt.Date;
 
-                    DateTime Startdate = dt.AddDays(-7);
+                    DateTime Startdate = dt.AddDays(-8);
                     DateTime weekdate = Enddate.Date;
 
                     sCriteria = @"@SQL=((""urn:schemas:httpmail:datereceived"" >= '" + Startdate + @"' AND ""urn:schemas:httpmail:datereceived"" <='" + Enddate + @"' ) OR (""urn:schemas:httpmail:date"" >= '" + Startdate + @"' AND ""urn:schemas:httpmail:date"" <='" + Enddate + @"' ) ) ";
@@ -264,16 +265,19 @@ namespace Escaltethreshold
                     //Get each item until item is null.
                     Outlook.MailItem oMail;
 
-                  
+                  try
+                        { 
 
                     /** start loops **/
                     for (int i = 1; i <= oRestrictedItems.Count; i++) // while (oMail != null)  //
                     {
 
-                        oMail = (Outlook.MailItem)oRestrictedItems[i];
-                        subject = oMail.Subject;
-                        body = oMail.Body;
+                       
+                            oMail = (Outlook.MailItem)oRestrictedItems[i];
+                            subject = oMail.Subject;
+                            body = oMail.Body;
 
+                      
                         /** Search for Keywords **/
                         if (subject.Contains("THRESHOLD") || body.Contains("Threshold") || body.Contains("Threshold Reporting - Nigeria"))
                         {
@@ -304,12 +308,12 @@ namespace Escaltethreshold
 
 
                                 //generating the sql query
-                                string isql = "INSERT INTO c##isng.THRESHOLD_TASK (TASKID,TASK_SUBJECT ,TASK_START_DATE,TASK_STATUS,TASK_END_DATE,LAST_UPDATE_DATE ," +
+                                string isql = "INSERT INTO THRESHOLD_TASK (TASKID,TASK_SUBJECT ,TASK_START_DATE,TASK_STATUS,TASK_END_DATE,LAST_UPDATE_DATE ," +
                      "CREATION_DATE ,AST_UPDATE_BY, TASK_PRIORITY,TASK_ASSIGN1) Values ( '" + g + "',  '" + subject + "', '" + creationdate + "', 'In Progress',  '" + (creationdate.AddHours(2)) + "'," +
                          " '" + currTime + "','" + currTime + "','TML', 'High' , '" + recepients + "')";
 
                                 //insert into oracle database
-                                int ires = m.insupddelClass(isql);
+                                int ires = m.iClass(isql, 2);
                                 if (ires == 0)
                                 {
                                     Trace.WriteLine(">>>>>>> Information not inserted into Database");
@@ -318,7 +322,7 @@ namespace Escaltethreshold
 
                                 //send Text Messages
                                 string xphone = ConfigurationManager.AppSettings["phonenumber"];
-                                string msg = " Hello you have an appointment with " + recepients + "  " + subject + " Please check your calendar";
+                                string msg = " Hello you have an appointment with " + recepients + "  on  " + subject + " Please check your calendar";
 
                                 //Call Send SMS method
                                 m.sendtextmessage(xphone, msg);
@@ -334,7 +338,12 @@ namespace Escaltethreshold
 
                     /** >>>>>>>>>>>>>>>>>>>>> End Check for read messages >>>>>>>>>>>>>>>>> **/
 
-
+                          }
+                        catch (InvalidCastException ex)
+                        {
+                            Trace.WriteLine("Invalid Cast Expression -->" + ex.ToString() );
+                           // throw;
+                        }
 
 
                 } /** End of if ismailItem **/
