@@ -247,7 +247,7 @@ namespace Escaltethreshold
 
                     DateTime Enddate = dt.Date;
 
-                    DateTime Startdate = dt.AddDays(-8);
+                    DateTime Startdate = dt.AddDays(-2);
                     DateTime weekdate = Enddate.Date;
 
                     sCriteria = @"@SQL=((""urn:schemas:httpmail:datereceived"" >= '" + Startdate + @"' AND ""urn:schemas:httpmail:datereceived"" <='" + Enddate + @"' ) OR (""urn:schemas:httpmail:date"" >= '" + Startdate + @"' AND ""urn:schemas:httpmail:date"" <='" + Enddate + @"' ) ) ";
@@ -484,7 +484,7 @@ namespace Escaltethreshold
 
             Guid g = Guid.NewGuid();
             string isql = "INSERT " +
-                 "INTO C##ISNG.APPMONITOR" +
+                 "INTO APPMONITOR" +
                   "(" +
                   "HOSTNAME ," +
                   " CREATED_BY ," +
@@ -501,7 +501,7 @@ namespace Escaltethreshold
               " '" + hostname + "'," +
               " 'TML' ," +
                " '" + endtime + "'," +
-                " sysdate," +
+                " CURDATE()," +
                " 'TML'," +
                 " '" + endtime + "'," +
                     " '" + endtime + "'," +
@@ -509,7 +509,7 @@ namespace Escaltethreshold
             "  '" + g + "' " +
                  ")";
             MainClass m = new MainClass();
-            int y = m.insupddelClass(isql);
+            int y = m.iClass(isql, 2);
 
             if (y == 1)
             {
