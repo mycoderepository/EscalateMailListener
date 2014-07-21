@@ -47,7 +47,7 @@ namespace Escaltethreshold
             Trace.WriteLine("Starting threshold Model -->" + dt + "", "TML");
             p.ThresholdListener();
 
-            Trace.WriteLine("Endiing threshold Model -->" + dt + " ", "TML");
+            Trace.WriteLine("Ending threshold Model -->" + dt + " ", "TML");
             Trace.WriteLine("Memory Consumption " + p.processcalc().ToString() + " \n ");
 
             string xendtime = dt.ToString();
@@ -203,7 +203,7 @@ namespace Escaltethreshold
                             " '" + currTime + "','" + currTime + "','TML', 'High' , '" + recepients + "')";
 
 
-                            //insert into oracle database
+                            //insert into  database
                             //int ires = m.insupddelClass(isql);
                             int ires = m.iClass(isql, 2);
                             if (ires == 0)
