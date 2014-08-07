@@ -1,4 +1,5 @@
-﻿using System;
+﻿#region Namespaces
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,7 +23,7 @@ using MySql.Data.MySqlClient;
 using com.IBL.Utility;
 using System.Data.SqlClient;
 
-
+#endregion
 
 
 namespace Escaltethreshold

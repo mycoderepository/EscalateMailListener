@@ -21,7 +21,7 @@ using Office = Microsoft.Office.Core;
 
 namespace Escaltethreshold
 {
-    class Program
+    class Program : Form    
     {
 
         [STAThread]
@@ -48,7 +48,7 @@ namespace Escaltethreshold
             p.ThresholdListener();
 
             Trace.WriteLine("Ending threshold Model -->" + dt + " ", "TML");
-            Trace.WriteLine("Memory Consumption " + p.processcalc().ToString() + " \n ");
+            Trace.WriteLine(">>>>>>>> Memory Consumption " + p.processcalc().ToString() + " \n ", "TML");
 
             string xendtime = dt.ToString();
             p.audittrail(ipadr, strttime, xendtime);
@@ -57,6 +57,26 @@ namespace Escaltethreshold
 
             #endregion
 
+        }
+
+        public Program()
+        {
+                     NotifyIcon  trayIcon;
+         ContextMenu trayMenu;
+            // Create a simple tray menu with only one item.
+            trayMenu = new ContextMenu();
+           // trayMenu.MenuItems.Add("Exit", OnActivated);
+ 
+            // Create a tray icon. In this example we use a
+            // standard system icon for simplicity, but you
+            // can of course use your own custom icon too.
+            trayIcon      = new NotifyIcon();
+            trayIcon.Text = "Escalate Threshold Listener";
+           // trayIcon.Icon = new Icon(SystemIcons.Application, 40, 40);
+ 
+            // Add menu to tray icon and show it.
+            trayIcon.ContextMenu = trayMenu;
+            trayIcon.Visible     = true;
         }
 
         #region Main threshold Listener
@@ -152,6 +172,7 @@ namespace Escaltethreshold
                 /** start Mails items **/
                 if (isMailItem)
                 {
+                    #region Check for unread messages
                     /** >>>>>>>>>>>>>>>>>>>>> Start Check for Unread messages >>>>>>>>>>>>>>>>> **/
 
                     /** start loops **/
@@ -186,7 +207,7 @@ namespace Escaltethreshold
                             int X = m.createAppointment(subject, body, creationdate);
                             if (X == 0)
                             {
-                                Trace.WriteLine(">>>>>>> Appointment not inserted into calendar");
+                                Trace.WriteLine(">>>>>>> Appointment not inserted into calendar", "TML");
 
                             }
 
@@ -198,7 +219,7 @@ namespace Escaltethreshold
 
 
                             //generating the sql query
-                            string isql = "INSERT INTO c##isng.THRESHOLD_TASK (TASKID,TASK_SUBJECT ,TASK_START_DATE,TASK_STATUS,TASK_END_DATE,LAST_UPDATE_DATE ," +
+                            string isql = "INSERT INTO THRESHOLD_TASK (TASKID,TASK_SUBJECT ,TASK_START_DATE,TASK_STATUS,TASK_END_DATE,LAST_UPDATE_DATE ," +
                         "CREATION_DATE ,AST_UPDATE_BY, TASK_PRIORITY,TASK_ASSIGN1) Values ( '"+ g +"',  '" + subject + "', '" + creationdate + "', 'In Progress',  '" + (creationdate.AddHours(2)) + "'," +
                             " '" + currTime + "','" + currTime + "','TML', 'High' , '" + recepients + "')";
 
@@ -208,7 +229,7 @@ namespace Escaltethreshold
                             int ires = m.iClass(isql, 2);
                             if (ires == 0)
                             {
-                                Trace.WriteLine(">>>>>>> Information not inserted into Database");
+                                Trace.WriteLine(">>>>>>> Information not inserted into Database", "TML");
                             }
 
 
@@ -227,7 +248,9 @@ namespace Escaltethreshold
 
                     } /** End For loop for unread mails**/
                     /** >>>>>>>>>>>>>>>>>>>>> End Check for Unread messages >>>>>>>>>>>>>>>>> **/
+                    #endregion
 
+                    #region  Check for read Message
                     /** >>>>>>>>>>>>>>>>>>>>>>> Check for read Messages >>>>>>>>>>>>>>>>>>> **/
 
 
@@ -258,7 +281,7 @@ namespace Escaltethreshold
                     oRestrictedItems.Sort("[SentOn]", false);
                     oRestrictedItems.IncludeRecurrences = false;
 
-                    Trace.WriteLine(">>>>>>> Total Items Unrestricted : " + oRestrictedItems.Count);
+                    Trace.WriteLine(">>>>>>> Total Items Unrestricted : " + oRestrictedItems.Count, "TML");
 
 
 
@@ -299,7 +322,7 @@ namespace Escaltethreshold
                                 int X = m.createAppointment(subject, body, creationdate);
                                 if (X == 0)
                                 {
-                                    Trace.WriteLine(">>>>>>> Appointment not inserted into Calendar");
+                                    Trace.WriteLine(">>>>>>> Appointment not inserted into Calendar", "TML");
                                 }
 
 
@@ -336,15 +359,15 @@ namespace Escaltethreshold
 
                     } /** End For loop**/
 
-                    /** >>>>>>>>>>>>>>>>>>>>> End Check for read messages >>>>>>>>>>>>>>>>> **/
-
-                          }
+                     
+                        }
                         catch (InvalidCastException ex)
                         {
-                            Trace.WriteLine("Invalid Cast Expression -->" + ex.ToString() );
+                            Trace.WriteLine("Invalid Cast Expression -->" + ex.ToString(), "TML");
                            // throw;
                         }
-
+                    /** >>>>>>>>>>>>>>>>>>>>> End Check for read messages >>>>>>>>>>>>>>>>> **/
+                    #endregion 
 
                 } /** End of if ismailItem **/
 
@@ -513,13 +536,13 @@ namespace Escaltethreshold
 
             if (y == 1)
             {
-                Trace.WriteLine("<<<<<<<<Audit Trail Updated>>>>>>>>>>");
+                Trace.WriteLine("<<<<<<<<Audit Trail Updated>>>>>>>>>>", "TML");
 
             }
             else
             {
 
-                Trace.WriteLine("<<<<<<<Audit Trail Not Updated>>>>>>>>");
+                Trace.WriteLine("<<<<<<<Audit Trail Not Updated>>>>>>>>", "TML");
             }
 
         }
