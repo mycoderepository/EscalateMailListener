@@ -14,6 +14,10 @@ using System.Configuration;
 using System.Windows.Forms;
 using System.Net;
 using Office = Microsoft.Office.Core;
+using System.Threading.Tasks;
+using System.Threading;
+using System.ServiceProcess;
+
 
 
 
@@ -21,10 +25,11 @@ using Office = Microsoft.Office.Core;
 
 namespace Escaltethreshold
 {
-    class Program : Form    
+    class Program : ServiceBase
     {
+        public const string ServiceName = "Escalate THreshold";
 
-        [STAThread]
+        // [STAThread]
         static void Main(string[] args)
         {
             #region Call to main Execution
@@ -37,6 +42,7 @@ namespace Escaltethreshold
 
             string ipadr = p.GetIp();
             string strttime = dt.ToString();
+
 
             Trace.WriteLine("Checking for Network Connection --> " + dt + ".", "TML");
             p.checknetwork();
@@ -54,30 +60,19 @@ namespace Escaltethreshold
             p.audittrail(ipadr, strttime, xendtime);
 
             Trace.WriteLine("<<<<<<<<<<<<<Application Ended>>>>>>>>>>>>>>>>>>> " + dt + "\n", "TML");
-
             #endregion
 
         }
 
-        public Program()
-        {
-                     NotifyIcon  trayIcon;
-         ContextMenu trayMenu;
-            // Create a simple tray menu with only one item.
-            trayMenu = new ContextMenu();
-           // trayMenu.MenuItems.Add("Exit", OnActivated);
- 
-            // Create a tray icon. In this example we use a
-            // standard system icon for simplicity, but you
-            // can of course use your own custom icon too.
-            trayIcon      = new NotifyIcon();
-            trayIcon.Text = "Escalate Threshold Listener";
-           // trayIcon.Icon = new Icon(SystemIcons.Application, 40, 40);
- 
-            // Add menu to tray icon and show it.
-            trayIcon.ContextMenu = trayMenu;
-            trayIcon.Visible     = true;
-        }
+        //#region program definition
+        //public Program()
+        //{
+
+
+
+
+        //}
+        //#endregion
 
         #region Main threshold Listener
         public void ThresholdListener()
@@ -95,6 +90,7 @@ namespace Escaltethreshold
             string currTime = thisDate.ToString("d", culture);
 
             MainClass m = new MainClass();
+            mDataReader r = new mDataReader();
 
 
             //Check if Outlook process is running
@@ -145,7 +141,7 @@ namespace Escaltethreshold
             Outlook.Items UnReads = myInbox.Items.Restrict("[Unread]=true");
 
             /** start unread Mails**/
-            if (UnReads.Count > 0 || myInbox.Items.Count > 0) 
+            if (UnReads.Count > 0 || myInbox.Items.Count > 0)
             {
                 string subject = string.Empty;
                 string attachments = string.Empty;
@@ -203,42 +199,76 @@ namespace Escaltethreshold
                                 recepients = (recip.Name);
                             }
 
-                            //Create Appointments
-                            int X = m.createAppointment(subject, body, creationdate);
-                            if (X == 0)
-                            {
-                                Trace.WriteLine(">>>>>>> Appointment not inserted into calendar", "TML");
-
-                            }
-
-
-                            var result = MessageBox.Show(" Hello " + recepients + " \n New Appointment/Calendar with Subject " + subject + "", "",
-                                             MessageBoxButtons.OK);
-
-
-
-
-                            //generating the sql query
-                            string isql = "INSERT INTO THRESHOLD_TASK (TASKID,TASK_SUBJECT ,TASK_START_DATE,TASK_STATUS,TASK_END_DATE,LAST_UPDATE_DATE ," +
-                        "CREATION_DATE ,AST_UPDATE_BY, TASK_PRIORITY,TASK_ASSIGN1) Values ( '"+ g +"',  '" + subject + "', '" + creationdate + "', 'In Progress',  '" + (creationdate.AddHours(2)) + "'," +
-                            " '" + currTime + "','" + currTime + "','TML', 'High' , '" + recepients + "')";
-
-
-                            //insert into  database
-                            //int ires = m.insupddelClass(isql);
-                            int ires = m.iClass(isql, 2);
-                            if (ires == 0)
-                            {
-                                Trace.WriteLine(">>>>>>> Information not inserted into Database", "TML");
-                            }
 
 
                             //send Text Messages
-                            string xphone = "+2348029998152";//ConfigurationManager.AppSettings["phonenumber"];
-                            string msg = " Hello you have an appointment with " + recepients + "  on  " + subject + " Please check your calendar";
+                            string osql = String.Empty;
 
-                            //call send SMS method
-                            m.sendtextmessage(xphone, msg);
+                            osql = "select phonenumber, Fullname, emailaddress from thresholduser";
+
+                            //string xphone = ConfigurationManager.AppSettings["phonenumber"];
+
+                            string xphone = String.Empty;
+                            string xfullname = String.Empty;
+                            string xemail = String.Empty;
+
+
+                            r = m.Populate1(osql, 3);
+                            if (r.mysqlrdr.HasRows)
+                            {
+                                while (r.mysqlrdr.Read())
+                                {
+                                    xphone = r.mysqlrdr["phonenumber"].ToString();
+                                    xfullname = r.mysqlrdr["fullname"].ToString();
+                                    xemail = r.mysqlrdr["emailaddress"].ToString();
+
+
+                                    string msg = " Hello  " + xfullname + " you have an appointment with " + recepients + "  on  " + subject + " Please check your calendar";
+
+                                    //Send Text Message
+                                    m.sendtextmessage(xphone, msg);
+
+
+                                    //Create Appointments
+                                    int X = m.createAppointment(subject, body, creationdate, xemail);
+                                    if (X == 0)
+                                    {
+                                        Trace.WriteLine(">>>>>>> Appointment not inserted into calendar", "TML");
+
+                                    }
+                                }
+
+
+
+
+
+                                var result = MessageBox.Show(" Hello " + recepients + " \n New Appointment/Calendar with Subject " + subject + "", "",
+                                                 MessageBoxButtons.OK);
+
+
+
+
+                                //generating the sql query
+                                string isql = "INSERT INTO THRESHOLD_TASK (TASKID,TASK_SUBJECT ,TASK_START_DATE,TASK_STATUS,TASK_END_DATE,LAST_UPDATE_DATE ," +
+                            "CREATION_DATE ,AST_UPDATE_BY, TASK_PRIORITY,TASK_ASSIGN1) Values ( '" + g + "',  '" + subject + "', '" + creationdate + "', 'In Progress',  '" + (creationdate.AddHours(2)) + "'," +
+                                " '" + currTime + "','" + currTime + "','TML', 'High' , '" + recepients + "')";
+
+
+                                //insert into  database
+                                //int ires = m.insupddelClass(isql);
+                                int ires = m.iClass(isql, 2);
+                                if (ires == 0)
+                                {
+                                    Trace.WriteLine(">>>>>>> Information not inserted into Database", "TML");
+                                }
+
+
+                            }
+
+
+               
+
+
 
 
 
@@ -259,7 +289,7 @@ namespace Escaltethreshold
 
                     //Include all occurrences of recurring items, and then sort them.
                     oItems.Sort("[Senton]", false);
-                 
+
 
                     // Define the string for the search criteria.
                     String sCriteria;
@@ -288,24 +318,24 @@ namespace Escaltethreshold
                     //Get each item until item is null.
                     Outlook.MailItem oMail;
 
-                  try
-                        { 
-
-                    /** start loops **/
-                    for (int i = 1; i <= oRestrictedItems.Count; i++) // while (oMail != null)  //
+                    try
                     {
 
-                       
+                        /** start loops **/
+                        for (int i = 1; i <= oRestrictedItems.Count; i++) // while (oMail != null)  //
+                        {
+
+
                             oMail = (Outlook.MailItem)oRestrictedItems[i];
                             subject = oMail.Subject;
                             body = oMail.Body;
 
-                      
-                        /** Search for Keywords **/
-                        if (subject.Contains("THRESHOLD") || body.Contains("Threshold") || body.Contains("Threshold Reporting - Nigeria"))
-                        {
-                          
-                           
+
+                            /** Search for Keywords **/
+                            if (subject.Contains("THRESHOLD") || body.Contains("Threshold") || body.Contains("Threshold Reporting - Nigeria"))
+                            {
+
+
                                 creationdate = (oMail.SentOn);
                                 subject = subject.Replace('\'', '\"').ToUpper();
 
@@ -318,56 +348,85 @@ namespace Escaltethreshold
                                     recepients = (recip.Name);
                                 }
 
-                                //Create Appointments
-                                int X = m.createAppointment(subject, body, creationdate);
-                                if (X == 0)
-                                {
-                                    Trace.WriteLine(">>>>>>> Appointment not inserted into Calendar", "TML");
-                                }
-
-
-                                var result = MessageBox.Show(" Hello " + recepients + " \n New Appointment/Calendar with Subject " + subject + "", "",
-                                                 MessageBoxButtons.OK);
-
-
-                                //generating the sql query
-                                string isql = "INSERT INTO THRESHOLD_TASK (TASKID,TASK_SUBJECT ,TASK_START_DATE,TASK_STATUS,TASK_END_DATE,LAST_UPDATE_DATE ," +
-                     "CREATION_DATE ,AST_UPDATE_BY, TASK_PRIORITY,TASK_ASSIGN1) Values ( '" + g + "',  '" + subject + "', '" + creationdate + "', 'In Progress',  '" + (creationdate.AddHours(2)) + "'," +
-                         " '" + currTime + "','" + currTime + "','TML', 'High' , '" + recepients + "')";
-
-                                //insert into oracle database
-                                int ires = m.iClass(isql, 2);
-                                if (ires == 0)
-                                {
-                                    Trace.WriteLine(">>>>>>> Information not inserted into Database");
-                                }
-
 
                                 //send Text Messages
-                                string xphone = ConfigurationManager.AppSettings["phonenumber"];
-                                string msg = " Hello you have an appointment with " + recepients + "  on  " + subject + " Please check your calendar";
+                                string osql = String.Empty;
 
-                                //Call Send SMS method
-                                m.sendtextmessage(xphone, msg);
+                                osql = "select phonenumber, Fullname, emailaddress from thresholduser";
+
+                                //string xphone = ConfigurationManager.AppSettings["phonenumber"];
+
+                                string xphone = String.Empty;
+                                string xfullname = String.Empty;
+                                string xemail = String.Empty;
+
+
+                                r = m.Populate1(osql, 3);
+                                if (r.mysqlrdr.HasRows)
+                                {
+                                    while (r.mysqlrdr.Read())
+                                    {
+                                        xphone = r.mysqlrdr["phonenumber"].ToString();
+                                        xfullname = r.mysqlrdr["fullname"].ToString();
+                                        xemail = r.mysqlrdr["emailaddress"].ToString();
+
+
+                                        string msg = " Hello  " + xfullname + " you have an appointment with " + recepients + "  on  " + subject + " Please check your calendar";
+
+                                        //Send Text Message
+                                        m.sendtextmessage(xphone, msg);
+
+
+                                        //Create Appointments
+                                        int X = m.createAppointment(subject, body, creationdate, xemail);
+                                        if (X == 0)
+                                        {
+                                            Trace.WriteLine(">>>>>>> Appointment not inserted into calendar", "TML");
+
+                                        }
+                                    }
+
+
+                                    //Create Appointments
+
+
+
+                                    var result = MessageBox.Show(" Hello " + recepients + " \n New Appointment/Calendar with Subject " + subject + "", "",
+                                                     MessageBoxButtons.OK);
+
+
+                                    //generating the sql query
+                                    string isql = "INSERT INTO THRESHOLD_TASK (TASKID,TASK_SUBJECT ,TASK_START_DATE,TASK_STATUS,TASK_END_DATE,LAST_UPDATE_DATE ," +
+                         "CREATION_DATE ,AST_UPDATE_BY, TASK_PRIORITY,TASK_ASSIGN1) Values ( '" + g + "',  '" + subject + "', '" + creationdate + "', 'In Progress',  '" + (creationdate.AddHours(2)) + "'," +
+                             " '" + currTime + "','" + currTime + "','TML', 'High' , '" + recepients + "')";
+
+                                    //insert into oracle database
+                                    int ires = m.iClass(isql, 2);
+                                    if (ires == 0)
+                                    {
+                                        Trace.WriteLine(">>>>>>> Information not inserted into Database");
+                                    }
 
 
 
 
-                           
-                          //  oRestrictedItems.ResetColumns();    // reset search loop
-                        } //while loop
 
-                    } /** End For loop**/
 
-                     
+
+                                    //  oRestrictedItems.ResetColumns();    // reset search loop
+                                } //while loop
+
+                            } /** End For loop**/
+
                         }
-                        catch (InvalidCastException ex)
-                        {
-                            Trace.WriteLine("Invalid Cast Expression -->" + ex.ToString(), "TML");
-                           // throw;
-                        }
+                    }
+                    catch (InvalidCastException ex)
+                    {
+                        Trace.WriteLine("Invalid Cast Expression -->" + ex.ToString(), "TML");
+                        // throw;
+                    }
                     /** >>>>>>>>>>>>>>>>>>>>> End Check for read messages >>>>>>>>>>>>>>>>> **/
-                    #endregion 
+                    #endregion
 
                 } /** End of if ismailItem **/
 
@@ -404,8 +463,8 @@ namespace Escaltethreshold
         #region checking and starting outlook
         public void checkoutlook()
         {
-            int cntProcess ;
-             cntProcess = Process.GetProcessesByName("OUTLOOK").Count();
+            int cntProcess;
+            cntProcess = Process.GetProcessesByName("OUTLOOK").Count();
             if (cntProcess <= 0)
             {
 

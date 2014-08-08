@@ -32,7 +32,7 @@ namespace Escaltethreshold
 
     public struct mDataReader
     {
-        public MySqlDataReader mysqldr;
+        public MySqlDataReader mysqlrdr;
         public OracleDataReader orardr;
         public SqlDataReader sqlrdr;
 
@@ -104,28 +104,36 @@ namespace Escaltethreshold
         #region SMS forwarder
         public void sendtextmessage(string xTo, string xmsg)
         {
-            if (System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable() == true)
+            try
             {
+                if (System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable() == true)
+                {
 
-                string AccountSid = Devsecurity.StringDecrypt( ConfigurationManager.AppSettings["Authid"]);
-                string AuthToken = Devsecurity.StringDecrypt(ConfigurationManager.AppSettings["secret"]);
+                    string AccountSid = Devsecurity.StringDecrypt(ConfigurationManager.AppSettings["Authid"]);
+                    string AuthToken = Devsecurity.StringDecrypt(ConfigurationManager.AppSettings["secret"]);
 
-                var twilio = new TwilioRestClient(AccountSid, AuthToken);
+                    var twilio = new TwilioRestClient(AccountSid, AuthToken);
 
-                var message = twilio.SendMessage("+17314724935", xTo, xmsg);
+                    var message = twilio.SendMessage("+17314724935", xTo, xmsg);
+                    Trace.WriteLine(">>>>>>>>>>>>>>>>>> Message sent successfully to - " + xTo + "");
+                }
+                else
+                {
+                    MessageBox.Show("There is a Network Issue", "", MessageBoxButtons.OK);
 
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("There is a Network Issue", "", MessageBoxButtons.OK);
-
+                
+                 Trace.WriteLine(">>>>>>>>>>>>>>>>>> Message not sent to - "+xTo+" with error  "+ex+"");
             }
 
         }
         #endregion
 
         #region creating Appointment.
-        public int createAppointment(string xsubject, string xbody, DateTime xsentdate)
+        public int createAppointment(string xsubject, string xbody, DateTime xsentdate, string iemail)
         {
 
 
@@ -150,7 +158,7 @@ namespace Escaltethreshold
                 Outlook.MailItem mailItem = oAppointment.ForwardAsVcal();
 
                 // email address to send to 
-                mailItem.To =  ConfigurationManager.AppSettings["xemail"]; 
+                mailItem.To = iemail; // ConfigurationManager.AppSettings["xemail"]; 
                 mailItem.Send();
 
 
@@ -258,6 +266,87 @@ namespace Escaltethreshold
         {
             MessageBox.Show("You've got a new mail whose EntryIDCollection is \n" + EntryIDCollection,
                     "NOTE", MessageBoxButtons.OK);
+        }
+        #endregion
+
+        #region query database
+        public mDataReader Populate1(string xsql, int i)
+        {
+            mDataReader mDataReader = new mDataReader();
+            if (i == 1)   // Sql connection
+            {
+                SqlConnection sqlConnection = new SqlConnection(ConfigurationManager.ConnectionStrings["conSQL1"].ConnectionString);
+                SqlCommand sqlCommand = new SqlCommand();
+                string str = xsql;
+                sqlCommand.Connection = sqlConnection;
+                sqlCommand.CommandType = CommandType.Text;
+                sqlCommand.CommandText = str;
+                sqlConnection.Open();
+                mDataReader.sqlrdr = sqlCommand.ExecuteReader();
+                mDataReader.mysqlrdr = (MySqlDataReader)null;
+
+                return mDataReader;
+            }
+            else if (i == 2)  // Oracle Connecetions
+            {
+                //OracleConnection oracleConnection = new OracleConnection(Devsecurity.StringDecrypt(ConfigurationManager.ConnectionStrings["conOracle"].ConnectionString));
+                //OracleCommand oracleCommand = new OracleCommand();
+                //try
+                //{
+                //    string str = xsql;
+                //    oracleCommand.Connection = oracleConnection;
+                //    oracleCommand.CommandType = CommandType.Text;
+                //    oracleCommand.CommandText = str;
+                //    oracleConnection.Open();
+                //    mDataReader.orclrdr = oracleCommand.ExecuteReader();
+                //    mDataReader.sqlrdr = (SqlDataReader)null;
+                //}
+                //catch (Exception ex)
+                //{
+                //    this.writelog(Convert.ToString((object)ex));
+                //}
+                return mDataReader;
+            }
+            else if (i == 3)   // MySql Connection
+            {
+
+                try
+                {
+
+                    string oenusername = (oserveruname);
+                    string oenpassword = (oserverpwd);
+                    string xconn = "Server=" + omysqlserver + ";Port=" + oserverport + ";Database=isng;Uid=" + oenusername + ";Pwd=" + oenpassword + "";
+
+
+                    MySqlConnection conn = new MySqlConnection((xconn));
+                    MySqlCommand cmd = new MySqlCommand();
+
+                    string osql = xsql;
+
+
+                    cmd.Connection = conn;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.CommandText = osql;
+                    conn.Open();
+
+
+                    mDataReader.mysqlrdr = cmd.ExecuteReader();
+                    mDataReader.sqlrdr = null;
+
+
+
+                    return mDataReader;
+                    conn.Close();
+                    conn.Dispose();
+                }
+                catch (Exception ex)
+                {
+
+                    Trace.WriteLine(">>>>>>>> Error : "+((object)ex));
+                }
+
+            }
+            return mDataReader;
         }
         #endregion
 
