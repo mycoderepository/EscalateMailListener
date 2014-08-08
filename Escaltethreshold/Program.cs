@@ -206,7 +206,7 @@ namespace Escaltethreshold
 
                             osql = "select phonenumber, Fullname, emailaddress from thresholduser";
 
-                            //string xphone = ConfigurationManager.AppSettings["phonenumber"];
+                         
 
                             string xphone = String.Empty;
                             string xfullname = String.Empty;

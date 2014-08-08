@@ -15,12 +15,10 @@ using System.IO;
 using System.Configuration;
 using Oracle.DataAccess.Client;
 using System.Data;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using System.Configuration;
 using Twilio;
 using MySql.Data.MySqlClient;
-using com.IBL.Utility;
+//using com.IBL.Utility;
 using System.Data.SqlClient;
 
 #endregion
@@ -43,10 +41,10 @@ namespace Escaltethreshold
     class MainClass
     {
         ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2007_SP1);
-        string omysqlserver = ConfigurationManager.AppSettings["mysqlserver"];
-        string oserveruname = ConfigurationManager.AppSettings["serveruname"];
-        string oserverpwd = ConfigurationManager.AppSettings["serverpwd"];
-        string oserverport = ConfigurationManager.AppSettings["serverport"];
+        string omysqlserver = "10.31.25.29";//ConfigurationManager.AppSettings["mysqlserver"];
+        string oserveruname = "root";//ConfigurationManager.AppSettings["serveruname"];
+        string oserverpwd = "root123";//ConfigurationManager.AppSettings["serverpwd"];
+        string oserverport = "3306";//ConfigurationManager.AppSettings["serverport"];
         
         #region find outlook items
         public void FindItems()
@@ -109,8 +107,8 @@ namespace Escaltethreshold
                 if (System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable() == true)
                 {
 
-                    string AccountSid = Devsecurity.StringDecrypt(ConfigurationManager.AppSettings["Authid"]);
-                    string AuthToken = Devsecurity.StringDecrypt(ConfigurationManager.AppSettings["secret"]);
+                    string AccountSid = "AC5cc87b1275e7ef33ef2986be6be740a5";// Devsecurity.StringDecrypt(ConfigurationManager.AppSettings["Authid"]);
+                    string AuthToken = "605ec28a7d811660710961fdc3a9f594";// Devsecurity.StringDecrypt(ConfigurationManager.AppSettings["secret"]);
 
                     var twilio = new TwilioRestClient(AccountSid, AuthToken);
 
