@@ -266,12 +266,6 @@ namespace Escaltethreshold
                             }
 
 
-               
-
-
-
-
-
 
                         } /** End search for key words **/
 
@@ -294,13 +288,25 @@ namespace Escaltethreshold
                     // Define the string for the search criteria.
                     String sCriteria;
 
+
+
+                    string oSql = "select frequency from isng.threshold_frequency";
+
+                    r = m.Populate1(oSql, 3);
+
+                    r.mysqlrdr.Read();
+                    int numdays = (int.Parse(r.mysqlrdr["frequency"].ToString()));
+
+                    
+
                     // Set the criteria for the Date fields.
 
                     DateTime dt = DateTime.Now;
 
                     DateTime Enddate = dt.Date;
 
-                    DateTime Startdate = dt.AddDays(-2);
+                    //DateTime Startdate = dt.AddDays(-2);
+                    DateTime Startdate = dt.AddDays(numdays);
                     DateTime weekdate = Enddate.Date;
 
                     sCriteria = @"@SQL=((""urn:schemas:httpmail:datereceived"" >= '" + Startdate + @"' AND ""urn:schemas:httpmail:datereceived"" <='" + Enddate + @"' ) OR (""urn:schemas:httpmail:date"" >= '" + Startdate + @"' AND ""urn:schemas:httpmail:date"" <='" + Enddate + @"' ) ) ";
@@ -420,6 +426,7 @@ namespace Escaltethreshold
 
                         }
                     }
+
                     catch (InvalidCastException ex)
                     {
                         Trace.WriteLine("Invalid Cast Expression -->" + ex.ToString(), "TML");
@@ -438,7 +445,8 @@ namespace Escaltethreshold
         #region garbage collection
         private void Items_ItemAdd(object Item)
         {
-            MessageBox.Show("New Mail");
+           // MessageBox.Show("New Mail");
+            ThresholdListener();
             throw new NotImplementedException();
         }
         #endregion
