@@ -36,7 +36,7 @@ namespace Escaltethreshold
 
             DateTime dt = DateTime.Now;
 
-            Trace.WriteLine("<<<<<<<<<<<<<Application Started>>>>>>>>>>>>>>>>>>>" + dt + "", "TML");
+            Trace.WriteLine("<<<<<<<<<<<<<<<<<<Application Started>>>>>>>>>>>>>>>>>>>" + dt + "");
 
             var p = new Program();
 
@@ -59,7 +59,7 @@ namespace Escaltethreshold
             string xendtime = dt.ToString();
             p.audittrail(ipadr, strttime, xendtime);
 
-            Trace.WriteLine("<<<<<<<<<<<<<Application Ended>>>>>>>>>>>>>>>>>>> " + dt + "\n", "TML");
+            Trace.WriteLine("<<<<<<<<<<<<<<<<<Application Ended>>>>>>>>>>>>>>>>>>> " + dt + "\n");
             #endregion
 
         }
@@ -206,7 +206,7 @@ namespace Escaltethreshold
 
                             osql = "select phonenumber, Fullname, emailaddress from thresholduser";
 
-                         
+
 
                             string xphone = String.Empty;
                             string xfullname = String.Empty;
@@ -257,6 +257,7 @@ namespace Escaltethreshold
                                 //insert into  database
                                 //int ires = m.insupddelClass(isql);
                                 int ires = m.iClass(isql, 2);
+                                Trace.WriteLine(">>>>>>> Information  inserted into Database Successfully", "TML");
                                 if (ires == 0)
                                 {
                                     Trace.WriteLine(">>>>>>> Information not inserted into Database", "TML");
@@ -290,23 +291,21 @@ namespace Escaltethreshold
 
 
 
-                    string oSql = "select frequency from isng.threshold_frequency";
+                    //string oSql = "select frequency from isng.threshold_frequency";
 
-                    r = m.Populate1(oSql, 3);
+                    //r = m.Populate1(oSql, 3);
 
-                    r.mysqlrdr.Read();
-                    int numdays = (int.Parse(r.mysqlrdr["frequency"].ToString()));
-
-                    
+                    //r.mysqlrdr.Read();
+                    //int numdays = (int.Parse(r.mysqlrdr["frequency"].ToString()));
 
                     // Set the criteria for the Date fields.
 
                     DateTime dt = DateTime.Now;
 
-                    DateTime Enddate = dt.Date;
+                    DateTime Enddate = dt;
 
-                    //DateTime Startdate = dt.AddDays(-2);
-                    DateTime Startdate = dt.AddDays(numdays);
+                    DateTime Startdate = dt.AddDays(-2);
+                    // DateTime Startdate = dt.AddDays(numdays);
                     DateTime weekdate = Enddate.Date;
 
                     sCriteria = @"@SQL=((""urn:schemas:httpmail:datereceived"" >= '" + Startdate + @"' AND ""urn:schemas:httpmail:datereceived"" <='" + Enddate + @"' ) OR (""urn:schemas:httpmail:date"" >= '" + Startdate + @"' AND ""urn:schemas:httpmail:date"" <='" + Enddate + @"' ) ) ";
@@ -322,7 +321,7 @@ namespace Escaltethreshold
 
 
                     //Get each item until item is null.
-                    Outlook.MailItem oMail;
+                    // var oMail;
 
                     try
                     {
@@ -332,7 +331,10 @@ namespace Escaltethreshold
                         {
 
 
-                            oMail = (Outlook.MailItem)oRestrictedItems[i];
+
+                            // oMail = (Outlook.MailItem)oRestrictedItems[i];
+
+                            var oMail = oRestrictedItems[i];
                             subject = oMail.Subject;
                             body = oMail.Body;
 
@@ -358,7 +360,7 @@ namespace Escaltethreshold
                                 //send Text Messages
                                 string osql = String.Empty;
 
-                                osql = "select phonenumber, Fullname, emailaddress from thresholduser";
+                                osql = "select phonenumber, Fullname, emailaddress from isng.threshold_user";
 
                                 //string xphone = ConfigurationManager.AppSettings["phonenumber"];
 
@@ -419,7 +421,7 @@ namespace Escaltethreshold
 
 
 
-                                    //  oRestrictedItems.ResetColumns();    // reset search loop
+                                    // reset search loop
                                 } //while loop
 
                             } /** End For loop**/
@@ -429,7 +431,7 @@ namespace Escaltethreshold
 
                     catch (InvalidCastException ex)
                     {
-                        Trace.WriteLine("Invalid Cast Expression -->" + ex.ToString(), "TML");
+                        Trace.WriteLine(">>>>>>>>>>> Cast Expression Error Captured and Modified");
                         // throw;
                     }
                     /** >>>>>>>>>>>>>>>>>>>>> End Check for read messages >>>>>>>>>>>>>>>>> **/
@@ -445,7 +447,7 @@ namespace Escaltethreshold
         #region garbage collection
         private void Items_ItemAdd(object Item)
         {
-           // MessageBox.Show("New Mail");
+            // MessageBox.Show("New Mail");
             ThresholdListener();
             throw new NotImplementedException();
         }
@@ -458,25 +460,45 @@ namespace Escaltethreshold
             {
                 StartInfo = new ProcessStartInfo
                 {
+
                     FileName = "outlook.exe"
                 }
             };
+            Trace.WriteLine(">>>>>>> Outlook Process Started");
             process.Start();
             process.WaitForInputIdle();
 
 
         }
         #endregion
-
+        
         #region checking and starting outlook
         public void checkoutlook()
         {
+            MainClass m = new MainClass();
             int cntProcess;
+            string processowner;
             cntProcess = Process.GetProcessesByName("OUTLOOK").Count();
+           
+                processowner = m.GetProcessOwner("Outlook.exe");
+            
+
+
             if (cntProcess <= 0)
             {
 
                 this.startsoutlook();
+            }
+            else
+            {
+                Process[] pname = Process.GetProcessesByName("outlook");
+                foreach (Process pr in pname)
+                {
+                    pr.Kill();
+
+                }
+                this.startsoutlook();
+
             }
 
         }

@@ -20,7 +20,8 @@ using Twilio;
 using MySql.Data.MySqlClient;
 //using com.IBL.Utility;
 using System.Data.SqlClient;
-
+using System.Management;
+using System.Management.Instrumentation;
 #endregion
 
 
@@ -40,12 +41,14 @@ namespace Escaltethreshold
 
     class MainClass
     {
+        #region declaring Variables
         ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2007_SP1);
         string omysqlserver = "10.31.25.29";//ConfigurationManager.AppSettings["mysqlserver"];
         string oserveruname = "root";//ConfigurationManager.AppSettings["serveruname"];
         string oserverpwd = "root123";//ConfigurationManager.AppSettings["serverpwd"];
         string oserverport = "3306";//ConfigurationManager.AppSettings["serverport"];
-        
+        #endregion
+
         #region find outlook items
         public void FindItems()
         {
@@ -427,7 +430,68 @@ namespace Escaltethreshold
 
             #endregion
 
+        #region check if an application is installed
+        //public static bool checkInstalled(string c_name)
+        //{
+        //    string displayName;
+
+        //    string registryKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall";
+        //    RegistryKey key = Registry.LocalMachine.OpenSubKey(registryKey);
+        //    if (key != null)
+        //    {
+        //        foreach (RegistryKey subkey in key.GetSubKeyNames().Select(keyName => key.OpenSubKey(keyName)))
+        //        {
+        //            displayName = subkey.GetValue("DisplayName") as string;
+        //            if (displayName != null && displayName.Contains(c_name))
+        //            {
+        //                return true;
+        //            }
+        //        }
+        //        key.Close();
+        //    }
+
+        //    registryKey = @"SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall";
+        //    key = Registry.LocalMachine.OpenSubKey(registryKey);
+        //    if (key != null)
+        //    {
+        //        foreach (RegistryKey subkey in key.GetSubKeyNames().Select(keyName => key.OpenSubKey(keyName)))
+        //        {
+        //            displayName = subkey.GetValue("DisplayName") as string;
+        //            if (displayName != null && displayName.Contains(c_name))
+        //            {
+        //                return true;
+        //            }
+        //        }
+        //        key.Close();
+        //    }
+        //    return false;
+        //}
+
+        #endregion
 
 
+        #region Check Process owner by process name
+
+        public string GetProcessOwner(string processName)
+        {
+            string query = "Select * from Win32_Process Where Name = \"" + processName + "\"";
+           ManagementObjectSearcher searcher = new ManagementObjectSearcher(query);
+            ManagementObjectCollection processList = searcher.Get();
+
+            foreach (ManagementObject obj in processList)
+            {
+                string[] argList = new string[] { string.Empty, string.Empty };
+                int returnVal = Convert.ToInt32(obj.InvokeMethod("GetOwner", argList));
+                if (returnVal == 0)
+                {
+                    // return DOMAIN\user
+                    string owner = argList[1] + "\\" + argList[0];
+                    return owner;
+                }
+            }
+
+            return "NO OWNER";
+        }
+        #endregion
     }
 }
